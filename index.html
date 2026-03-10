@@ -2,145 +2,137 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PS5 Dashboard</title>
+<title>Google Drive</title>
+<link rel="icon" href="https://f.playcode.io/p-2680329/v-1/019cd6d7-1415-7621-a391-4e867d3ef988/google-drive.png" type="image/png">
+<link rel="icon" href="./google-drive.png" type="image/png">
 <script src="vids.js"></script>
 <style>
-:root { --ps-blue:#0072ce; --ps-dark:#050505; }
-body,html{margin:0;padding:0;background:var(--ps-dark);color:white;font-family:'Segoe UI',sans-serif;height:100%;overflow:hidden}
+:root { --ps-blue: #0072ce; --ps-dark: #050505; }
+body, html { margin:0; padding:0; background:var(--ps-dark); color:white; font-family:'Segoe UI',sans-serif; height:100%; overflow:hidden; }
 
-#hero-bg{position:absolute;top:0;left:0;width:100vw;height:100vh;background-size:cover;background-position:center;background-repeat:no-repeat;z-index:-2;transition:background-image .3s ease}
-
-.vignette{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.85));z-index:-1}
-
-.top-nav{display:flex;justify-content:space-between;align-items:center;padding:30px 60px;position:relative;z-index:10}
-.tabs span{margin-right:40px;font-size:1.4rem;opacity:.5;cursor:pointer}
-.tabs span.active{opacity:1;border-bottom:3px solid white;padding-bottom:5px}
-
-.system-icons{display:flex;gap:20px;align-items:center;font-size:1.3rem}
-.view{display:none;padding:0 60px}
-.view.active{display:block}
-
-.icon-row{display:flex;gap:15px;margin-top:15px}
-.item-icon{width:95px;height:95px;border-radius:12px;background:rgba(255,255,255,.1);border:4px solid transparent;cursor:pointer;transition:.2s;overflow:hidden}
-.item-icon.active{border-color:white;transform:scale(1.15)}
-.item-icon img{width:100%;height:100%;object-fit:cover}
-
-.branding{position:absolute;bottom:10%;left:60px;z-index:10}
-#display-title{font-size:4rem;margin:0;font-weight:800}
-.tagline{font-size:1.2rem;opacity:.7;margin-bottom:20px}
-.play-btn{background:rgba(255,255,255,.2);color:white;border:none;padding:18px 80px;border-radius:40px;font-size:1.2rem;font-weight:bold;cursor:pointer}
-.play-btn:hover{background:white;color:black}
+#hero-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; background-position:center; background-size:cover; background-repeat:no-repeat; z-index:-2; transition: background-image 0.35s ease; }
+.vignette { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%); z-index:-1; pointer-events:none; }
+.top-nav { display:flex; justify-content:space-between; align-items:center; padding:30px 60px; position:relative; z-index:10; }
+.tabs span { margin-right:40px; font-size:1.4rem; opacity:0.5; cursor:pointer; }
+.tabs span.active { opacity:1; border-bottom:3px solid white; padding-bottom:5px; }
+.system-icons { display:flex; gap:20px; align-items:center; font-size:1.3rem; }
+.view { display:none; padding:0 60px; position:relative; z-index:10; }
+.view.active { display:block; }
+.icon-row { display:flex; gap:15px; margin-top:15px; }
+.item-icon { width:95px; height:95px; border-radius:12px; background: rgba(255,255,255,0.1); border:4px solid transparent; cursor:pointer; transition:0.2s; overflow:hidden; }
+.item-icon.active { border-color:white; transform:scale(1.15); }
+.item-icon img { width:100%; height:100%; object-fit:cover; }
+.branding { position:absolute; bottom:10%; left:60px; z-index:10; }
+.logo-text { font-size:4.5rem; margin:0; font-weight:800; text-transform:uppercase; }
+.tagline { font-size:1.3rem; opacity:0.7; margin-bottom:20px; }
+.play-btn { background: rgba(255,255,255,0.2); color:white; border:none; padding:18px 80px; border-radius:40px; font-size:1.2rem; font-weight:bold; cursor:pointer; backdrop-filter:blur(10px); }
+.play-btn:hover { background:white; color:black; }
+#settings-modal { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%); background: rgba(15,15,20,0.98); padding:40px; border-radius:20px; display:none; z-index:100; border:1px solid #444; text-align:center; }
+.btn-s { background:var(--ps-blue); border:none; color:white; padding:10px 20px; border-radius:5px; margin:10px; cursor:pointer; }
+#game-player { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:200; display:none; }
+#game-frame { width:100%; height:100%; border:none; }
 </style>
 </head>
 <body>
-
 <div id="hero-bg"></div>
 <div class="vignette"></div>
-
 <div class="top-nav">
 <div class="tabs">
-<span id="t-home" class="active" onclick="tab='home';update()">Games</span>
-<span id="t-movies" onclick="tab='movies';update()">Videos</span>
-<span id="t-store" onclick="tab='store';update()">Store</span>
+<span id="t-home" class="active" onclick="tab='home'; update()">Games</span>
+<span id="t-movies" onclick="tab='movies'; update()">Videos</span>
+<span id="t-store" onclick="tab='store'; update()">Store</span>
 </div>
 <div class="system-icons">
+<span onclick="toggleSettings()" style="cursor:pointer">⚙️ Settings</span>
 <div id="clock">00:00</div>
 </div>
 </div>
-
 <div id="v-home" class="view active"><div class="icon-row" id="row-home"></div></div>
 <div id="v-movies" class="view"><div class="icon-row" id="row-movies"></div></div>
 <div id="v-store" class="view"><div class="icon-row" id="row-store"></div></div>
-
 <div class="branding">
 <h1 id="display-title">---</h1>
 <p class="tagline" id="display-tag">---</p>
 <button class="play-btn" onclick="handleAction()">Play</button>
 </div>
-
+<div id="settings-modal">
+<h2>System Storage</h2>
+<button class="btn-s" onclick="exportData()">Export Save Data</button>
+<button class="btn-s" onclick="document.getElementById('imp').click()">Import Save Data</button>
+<input type="file" id="imp" style="display:none" onchange="importData(event)">
+<p><button onclick="toggleSettings()" style="color:gray; background:none; border:none; cursor:pointer">Close</button></p>
+</div>
+<div id="game-player"><iframe id="game-frame"></iframe></div>
 <script>
-
 const gameDatabase={
-'as':{name:"Astro's Playroom",tag:'Explore the SSD',icon:'img/as.png',hero:'img/as2.png',file:'as.html'},
-'hk':{name:'Hollow Knight',tag:'Team Cherry',icon:'img/hk.png',hero:'img/hk2.png',file:'hk.html'},
-'cp':{name:'Cuphead',tag:'Studio MDHR',icon:'img/cp.png',hero:'img/cp2.png',file:'cp.html'},
-'yt':{name:'YouTube',tag:'Google LLC',icon:'img/yt.png',hero:'img/yt2.png',file:'yt.html'}
-}
+as:{name:"Astro's Playroom", tag:"Explore the SSD", icon:"img/as.png", hero:"as2.png", file:"as.html"},
+hk:{name:"Hollow Knight", tag:"Team Cherry", icon:"img/hk.png", hero:"hk2.png", file:"hk.html"},
+cp:{name:"Cuphead", tag:"Studio MDHR", icon:"img/cp.png", hero:"cp2.png", file:"cp.html"},
+yt:{name:"YouTube", tag:"Google LLC", icon:"img/yt.png", hero:"yt2.png", file:"yt.html"},
+mc:{name:"Minecraft", tag:"Mojang", icon:"img/mc.png", hero:"mc2.png", file:"mc.html"},
+cc:{name:"Cookie Clicker", tag:"Orteil", icon:"img/cc.png", hero:"cc2.png", file:"cc.html"},
+dm:{name:"Drive Mad", tag:"Indie", icon:"img/dm.png", hero:"dm2.png", file:"dm.html"},
+ovo:{name:"Ovo", tag:"Indie", icon:"img/ovo.png", hero:"ovo2.png", file:"ovo.html"}
+};
 
-let tab='home',hIdx=0,mIdx=0,sIdx=0
-
-function setHero(img){
- document.getElementById('hero-bg').style.backgroundImage="url('"+img+"')"
-}
-
+let tab='home', hIdx=0, mIdx=0, sIdx=0;
+function setHero(img){ document.getElementById('hero-bg').style.background="url('img/"+img+"') center / cover no-repeat"; }
 function update(){
-const vDb=window.videoDatabase||{}
-const gKeys=Object.keys(gameDatabase)
-const mKeys=Object.keys(vDb)
-
- document.querySelectorAll('.view,.tabs span').forEach(el=>el.classList.remove('active'))
- document.getElementById(`v-${tab}`).classList.add('active')
- document.getElementById(`t-${tab}`).classList.add('active')
-
- let keys=tab==='home'?gKeys:tab==='movies'?mKeys:gKeys
- let idx=tab==='home'?hIdx:tab==='movies'?mIdx:sIdx
- let db=tab==='movies'?vDb:gameDatabase
-
- if(db&&keys[idx]){
- const item=db[keys[idx]]
- setHero(item.hero)
- document.getElementById('display-title').innerText=item.name
- document.getElementById('display-tag').innerText=item.tag
+ const vDb=window.videoDatabase||{};
+ const gKeys=Object.keys(gameDatabase);
+ const mKeys=Object.keys(vDb);
+ document.querySelectorAll('.view, .tabs span').forEach(el=>el.classList.remove('active'));
+ document.getElementById(`v-${tab}`).classList.add('active');
+ document.getElementById(`t-${tab}`).classList.add('active');
+ let keys=tab==='home'?gKeys:tab==='movies'?mKeys:gKeys;
+ let idx=tab==='home'?hIdx:tab==='movies'?mIdx:sIdx;
+ let db=tab==='movies'?vDb:gameDatabase;
+ if(db && keys[idx]){
+ const item=db[keys[idx]];
+ setHero(item.hero);
+ document.getElementById('display-title').innerText=item.name;
+ document.getElementById('display-tag').innerText=item.tag;
  }
-
- render('row-home',gKeys,hIdx,gameDatabase,'home')
- render('row-movies',mKeys,mIdx,vDb,'movies')
- render('row-store',gKeys,sIdx,gameDatabase,'store')
+ render('row-home', gKeys, hIdx, gameDatabase, 'home');
+ render('row-movies', mKeys, mIdx, vDb, 'movies');
+ render('row-store', gKeys, sIdx, gameDatabase, 'store');
 }
-
 function render(id,list,active,src,rowTab){
-const row=document.getElementById(id)
-row.innerHTML=''
-
-list.forEach((k,i)=>{
- const item=src[k]
- const d=document.createElement('div')
- d.className=`item-icon ${i===active&&tab===rowTab?'active':''}`
-
- d.innerHTML=`<img src="${item.icon}" onerror="this.src='img/mv.png'">`
-
- d.onclick=()=>{
-  if(tab==='home')hIdx=i
-  else if(tab==='movies')mIdx=i
-  else sIdx=i
-  update()
- }
-
- row.appendChild(d)
-})
+ const row=document.getElementById(id); row.innerHTML='';
+ list.forEach((k,i)=>{
+ const d=document.createElement('div');
+ d.className=`item-icon ${i===active&&tab===rowTab?'active':''}`;
+ d.innerHTML=`<img src="${src[k].icon}" onerror="this.src='img/mv.png'">`;
+ d.onclick=()=>{ if(tab==='home') hIdx=i; else if(tab==='movies') mIdx=i; else sIdx=i; update(); };
+ row.appendChild(d);
+});
 }
-
 function handleAction(){
-const item=gameDatabase[Object.keys(gameDatabase)[hIdx]]
-window.location.href=item.file
+ const vDb=window.videoDatabase||{};
+ let keys=tab==='home'?Object.keys(gameDatabase):tab==='movies'?Object.keys(vDb):Object.keys(gameDatabase);
+ let idx=tab==='home'?hIdx:tab==='movies'?mIdx:sIdx;
+ let db=tab==='movies'?vDb:gameDatabase;
+ let item=db[keys[idx]];
+ if(!item) return;
+ document.getElementById('game-frame').src=item.file;
+ document.getElementById('game-player').style.display='block';
 }
-
+function toggleSettings(){ const s=document.getElementById('settings-modal'); s.style.display=s.style.display==='block'?'none':'block'; }
+function exportData(){ const data=JSON.stringify(localStorage); const blob=new Blob([data],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ps5_save.json'; a.click(); }
+function importData(e){ const fr=new FileReader(); fr.onload=()=>{ const data=JSON.parse(fr.result); Object.keys(data).forEach(k=>localStorage.setItem(k,data[k])); location.reload(); }; fr.readAsText(e.target.files[0]); }
+function closeGame(){ document.getElementById('game-player').style.display='none'; document.getElementById('game-frame').src=''; }
 window.onkeydown=e=>{
-const gL=Object.keys(gameDatabase).length
-
-if(e.key==='ArrowRight')hIdx=(hIdx+1)%gL
-else if(e.key==='ArrowLeft')hIdx=(hIdx-1+gL)%gL
-
-update()
-}
-
+ const gL=Object.keys(gameDatabase).length;
+ if(e.key==='ArrowRight') hIdx=(hIdx+1)%gL;
+ else if(e.key==='ArrowLeft') hIdx=(hIdx-1+gL)%gL;
+ else if(e.key==='Escape') closeGame();
+ update();
+};
 setInterval(()=>{
-const d=new Date()
-document.getElementById('clock').innerText=d.getHours()+":"+String(d.getMinutes()).padStart(2,'0')
-},1000)
-
-window.onload=update
-
+ const d=new Date();
+ document.getElementById('clock').innerText=d.getHours()+":"+String(d.getMinutes()).padStart(2,'0');
+},1000);
+window.onload=update;
 </script>
 </body>
 </html>
