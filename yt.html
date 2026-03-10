@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Youtube Viewer</title>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    text-align: center;
+}
+header {
+    padding: 20px;
+    font-size: 22px;
+    background: #181818;
+}
+input {
+    width: 50%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 15px;
+}
+button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    background: #cc0000;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover {
+    background: #ff0000;
+}
+#player {
+    margin-top: 30px;
+}
+iframe {
+    width: 80%;
+    height: 500px;
+    border-radius: 12px;
+    border: none;
+}
+#results {
+    margin-top: 30px;
+}
+.videoCard {
+    display: inline-block;
+    width: 250px;
+    margin: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.videoCard:hover {
+    transform: scale(1.05);
+}
+.videoCard img {
+    width: 100%;
+    border-radius: 10px;
+}
+.videoTitle {
+    font-size: 14px;
+    margin-top: 5px;
+}
+#loadMoreBtn {
+    display: block;
+    margin: 20px auto;
+}
+</style>
+</head>
+<body>
+
+<header>Embed Viewer</header>
+
+<!-- Load by video/playlist link -->
+<input id="input" placeholder="Paste YouTube video or playlist link">
+<button onclick="load()">Load</button>
+
+<br><br>
+
+<!-- Search -->
+<input id="searchQuery" placeholder="Search YouTube">
+<button onclick="searchYouTube()">Search</button>
+
+<div id="player"></div>
+<div id="results"></div>
+
+<script>
+const API_KEY = "AIzaSyBpElKUXLE826EblN4osqKi42UJepu2QbI";
+let nextPageToken = "";
+let currentQuery = "";
+
+/* ---- Load video/playlist by link ---- */
+function extractVideoID(url) {
+    const match = url.match(/(?:v=|youtu\.be\/)([^&]+)/);
+    return match ? match[1] : null;
+}
+
+function extractPlaylistID(url) {
+    const match = url.match(/[?&]list=([^&]+)/);
+    return match ? match[1] : null;
+}
+
+function load() {
+    const input = document.getElementById("input").value.trim();
+    if (!input) return;
+
+    const videoID = extractVideoID(input);
+    const playlistID = extractPlaylistID(input);
+
+    let embedURL = "";
+
+    if (playlistID && !videoID) {
+        embedURL = `https://www.youtube.com/embed/videoseries?list=${playlistID}`;
+    } else if (videoID) {
+        embedURL = playlistID
+            ? `https://www.youtube.com/embed/${videoID}?list=${playlistID}`
+            : `https://www.youtube.com/embed/${videoID}`;
+    } else {
+        alert("Invalid link");
+        return;
+    }
+
+    document.getElementById("player").innerHTML =
+        `<iframe src="${embedURL}" allowfullscreen></iframe>`;
+}
+
+/* ---- YouTube Search ---- */
+async function searchYouTube(reset = true) {
+    const query = document.getElementById("searchQuery").value.trim();
+    if (!query) return;
+
+    if (reset) {
+        document.getElementById("results").innerHTML = "";
+        nextPageToken = "";
+        currentQuery = query;
+    }
+
+    const searchURL =
+        `https://www.googleapis.com/youtube/v3/search?part=snippet` +
+        `&type=video` +
+        `&safeSearch=strict` +
+        `&maxResults=25` +
+        `&order=relevance` +
+        `&q=${encodeURIComponent(currentQuery)}` +
+        `&pageToken=${nextPageToken}` +
+        `&key=${API_KEY}`;
+
+    try {
+        const res = await fetch(searchURL);
+        const data = await res.json();
+
+        nextPageToken = data.nextPageToken || "";
+
+        const ids = data.items.map(item => item.id.videoId).join(",");
+
+        // Check embeddable + age restriction
+        const checkURL =
+            `https://www.googleapis.com/youtube/v3/videos?part=status,contentDetails` +
+            `&id=${ids}&key=${API_KEY}`;
+
+        const statusRes = await fetch(checkURL);
+        const statusData = await statusRes.json();
+
+        const allowedIDs = statusData.items
+            .filter(video =>
+                video.status.embeddable &&
+                video.contentDetails?.contentRating?.ytRating !== "ytAgeRestricted"
+            )
+            .map(video => video.id);
+
+        // Filter out live streams
+        const filteredVideos = data.items.filter(item =>
+            allowedIDs.includes(item.id.videoId) &&
+            item.snippet.liveBroadcastContent !== "live"
+        );
+
+        displayResults(filteredVideos);
+
+        if (nextPageToken) showLoadMore();
+        else removeLoadMore();
+
+    } catch (err) {
+        alert("Search failed");
+        console.error(err);
+    }
+}
+
+/* ---- Display results ---- */
+function displayResults(videos) {
+    const resultsDiv = document.getElementById("results");
+
+    videos.forEach(video => {
+        const videoId = video.id.videoId;
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+
+        const videoCard = document.createElement("div");
+        videoCard.className = "videoCard";
+        videoCard.innerHTML = `
+            <img src="${thumbnail}">
+            <div class="videoTitle">${title}</div>
+        `;
+        videoCard.onclick = () => loadFromID(videoId);
+
+        resultsDiv.appendChild(videoCard);
+    });
+}
+
+function loadFromID(videoID) {
+    document.getElementById("player").innerHTML =
+        `<iframe src="https://www.youtube.com/embed/${videoID}" allowfullscreen></iframe>`;
+}
+
+/* ---- Load More ---- */
+function showLoadMore() {
+    if (!document.getElementById("loadMoreBtn")) {
+        const btn = document.createElement("button");
+        btn.id = "loadMoreBtn";
+        btn.innerText = "Load More";
+        btn.onclick = () => searchYouTube(false);
+        document.getElementById("results").appendChild(btn);
+    }
+}
+
+function removeLoadMore() {
+    const btn = document.getElementById("loadMoreBtn");
+    if (btn) btn.remove();
+}
+</script>
+
+</body>
+</html>
